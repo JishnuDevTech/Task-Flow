@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 🔐 Auth Section -->
+  <section id="auth-section">
+    <div class="auth-container">
+      <h2>👤 Register to TaskFlow</h2>
+      <form id="auth-form">
+        <input type="text" id="auth-username" placeholder="Username" required />
+        <input type="password" id="auth-password" placeholder="Password" required />
+        <div class="auth-buttons">
+          <button id="login-btn">Login</button>
+          <button type="button" id="register-btn">Register</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ✅ Main App -->
+  <div id="main-app" style="display: none;">
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn">☰</button>
+    
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <button class="back-btn" style="display:none">←</button>
+        <h2>TaskFlow Menu</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <div class="menu-content">
+        <!-- Main Menu -->
+        <ul class="main-menu">
+          <li><a href="#" class="menu-item" data-section="dashboard">🏠 Dashboard</a></li>
+          <li><a href="#" class="menu-item" data-section="all-tasks">📋 All Tasks</a></li>
+          <li><a href="#" class="menu-item" data-section="today-tasks">⏰ Today's Tasks</a></li>
+          <li><a href="#" class="menu-item" data-section="important">⭐ Important</a></li>
+          <li><button id="logout-btn" class="menu-item">🚪 Log Out</button></li>
+        </ul>
+      </div>
+    </nav>
+    
+    <div class="container">
+      <header>
+        <h1>📋 TaskFlow</h1>
+        <p>Your smart task manager</p>
+      </header>
+
+      <section class="task-input">
+        <h2>Add New Task</h2>
+        <form id="task-form">
+          <input type="text" id="task-title" placeholder="Task title" required />
+          <input type="text" id="task-category" placeholder="Category (e.g. Study)" />
+          <select id="task-priority">
+            <option value="" disabled selected>Priority</option>
+            <option value="High">🔥 High</option>
+            <option value="Medium">⚡ Medium</option>
+            <option value="Low">🌀 Low</option>
+          </select>
+          <input type="date" id="task-date" />
+          <button type="submit">Add Task</button>
+        </form>
+      </section>
+
+      <section class="task-list-section">
+        <h2>🗂️ Your Tasks</h2>
+        <div id="task-list" class="task-list">
+          <!-- Tasks will be injected here -->
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
