@@ -13,10 +13,12 @@ import {
 const auth = window.firebase.auth;
 const db = window.firebase.db;
 
+// ===== GLOBAL STATE =====
+let tasks = [];
+
 // ===== TASK MANAGEMENT =====
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
-let tasks = [];
 
 async function fetchTasks() {
   const user = auth.currentUser;
@@ -32,7 +34,7 @@ async function addTask(task) {
   const user = auth.currentUser;
   if (!user) return alert("User not authenticated!");
 
-  task.userId = user.uid;  // Storing userId to associate tasks with the user
+  task.userId = user.uid;
   const docRef = await addDoc(collection(db, "tasks"), task);
   task.id = docRef.id;
   tasks.push(task);
@@ -132,7 +134,7 @@ const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
 
-// Register function
+// Register function - Fixed to ensure user has to manually login after registration
 registerBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
@@ -141,31 +143,31 @@ registerBtn.onclick = async (e) => {
   if (!email || !password) return alert('❗ Email and password are required.');
 
   try {
-    // Create user in Firebase Authentication
+    // Explicitly set a flag before creating the user
+    // This will help us prevent the automatic login
+    window.isRegistering = true;
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Create user document in Firestore, storing only the email
     await addDoc(collection(db, "users"), {
       uid: user.uid,
-      email: user.email  // Storing the email in Firestore
+      email: user.email
     });
 
-    alert('🎉 Registered successfully! Now login.');
+    // Sign out the user immediately
+    await signOut(auth);
     
-    // Reset form fields
-    authForm.reset();  // Clear input fields
+    // Clear the form fields
+    authForm.reset();
     
-    // Switch to login view
-    authSection.style.display = 'none';  // Hide the registration section
-    const loginSection = document.getElementById('login-section');  // Make sure to have a login section in your HTML
-    loginSection.style.display = 'block';  // Show the login section
-
-    // Focus on the username field for login
-    document.getElementById('auth-username').focus();  // Focus on username in login section
-
+    alert('🎉 Registered successfully! Please login with your credentials.');
+    
   } catch (err) {
     alert('❌ Registration failed: ' + err.message);
+  } finally {
+    // Clean up the registration flag
+    window.isRegistering = false;
   }
 };
 
@@ -175,11 +177,11 @@ loginBtn.onclick = async (e) => {
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
+  if (!email || !password) return alert('❗ Email and password are required.');
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    authSection.style.display = 'none';
-    mainApp.style.display = 'block';
-    await fetchTasks();
+    // Auth state change listener will handle showing the main app
   } catch (err) {
     alert('❌ Login failed: ' + err.message);
   }
@@ -189,8 +191,7 @@ loginBtn.onclick = async (e) => {
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
   await signOut(auth);
-  mainApp.style.display = 'none';
-  authSection.style.display = 'block';
+  // Auth state change listener will handle showing the auth section
 };
 
 // ===== SIDEBAR FUNCTIONALITY =====
@@ -245,12 +246,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ===== LOAD TASKS IF USER ALREADY LOGGED IN =====
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
+  if (user && !window.isRegistering) {
+    // Only show the main app if user is logged in AND we're not in the registration process
     mainApp.style.display = 'block';
     authSection.style.display = 'none';
     await fetchTasks();
   } else {
+    // Show auth section if no user or during registration
     mainApp.style.display = 'none';
     authSection.style.display = 'block';
+    
+    // If we're handling a logout or registration completion, clear any tasks from memory
+    if (!user) {
+      tasks = [];
+    }
   }
 });
