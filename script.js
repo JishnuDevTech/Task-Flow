@@ -9,7 +9,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-// ===== FIREBASE SETUP FROM WINDOW =====
+// ===== FIREBASE SETUP =====
 const auth = window.firebase.auth;
 const db = window.firebase.db;
 
@@ -132,21 +132,7 @@ const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
 
-loginBtn.onclick = async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('auth-username').value.trim();
-  const password = document.getElementById('auth-password').value;
-
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    authSection.style.display = 'none';
-    mainApp.style.display = 'block';
-    await fetchTasks();
-  } catch (err) {
-    alert('❌ Login failed: ' + err.message);
-  }
-};
-
+// Register function
 registerBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
@@ -162,16 +148,44 @@ registerBtn.onclick = async (e) => {
     // Create user document in Firestore, storing only the email
     await addDoc(collection(db, "users"), {
       uid: user.uid,
-      email: user.email  // Storing the email in Firestore (not in UI)
+      email: user.email  // Storing the email in Firestore
     });
 
     alert('🎉 Registered successfully! Now login.');
-    authForm.reset();
+    
+    // Reset form fields
+    authForm.reset();  // Clear input fields
+    
+    // Switch to login view
+    authSection.style.display = 'none';  // Hide the registration section
+    const loginSection = document.getElementById('login-section');  // Make sure to have a login section in your HTML
+    loginSection.style.display = 'block';  // Show the login section
+
+    // Focus on the username field for login
+    document.getElementById('auth-username').focus();  // Focus on username in login section
+
   } catch (err) {
     alert('❌ Registration failed: ' + err.message);
   }
 };
 
+// Login function
+loginBtn.onclick = async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    authSection.style.display = 'none';
+    mainApp.style.display = 'block';
+    await fetchTasks();
+  } catch (err) {
+    alert('❌ Login failed: ' + err.message);
+  }
+};
+
+// Logout function
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
   await signOut(auth);
