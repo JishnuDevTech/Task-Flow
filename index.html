@@ -17,11 +17,21 @@
         <input type="text" id="auth-username" placeholder="Gmail" required />
         <input type="password" id="auth-password" placeholder="Password" required />
         <div class="auth-buttons">
-          <button id="login-btn">Login</button>
-          <button type="button" id="register-btn">Register</button>
+          <button type="submit" id="login-btn">Login</button> <!-- Add type="submit" to login button -->
+          <button type="button" id="register-btn">Register</button> <!-- type="button" for register button -->
         </div>
       </form>
     </div>
+  </section>
+  <section id="login-section" style="display: none;">
+    <h2>👤 Login to TaskFlow</h2>
+    <form id="login-form">
+      <input type="text" id="login-username" placeholder="Gmail" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <div class="auth-buttons">
+        <button type="submit" id="login-btn">Login</button>
+      </div>
+    </form>
   </section>
 
   <!-- ✅ Main App -->

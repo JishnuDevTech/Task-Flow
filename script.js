@@ -131,10 +131,11 @@ const loginBtn = document.getElementById('login-btn');
 const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
+const loginSection = document.getElementById('login-section');
 
 // Register function
 registerBtn.onclick = async (e) => {
-  e.preventDefault();
+  e.preventDefault();  // Prevent form submission
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
@@ -158,7 +159,6 @@ registerBtn.onclick = async (e) => {
     
     // Switch to login view
     authSection.style.display = 'none';  // Hide the registration section
-    const loginSection = document.getElementById('login-section');  // Make sure to have a login section in your HTML
     loginSection.style.display = 'block';  // Show the login section
 
     // Focus on the username field for login
@@ -171,7 +171,7 @@ registerBtn.onclick = async (e) => {
 
 // Login function
 loginBtn.onclick = async (e) => {
-  e.preventDefault();
+  e.preventDefault();  // Prevent form submission
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
@@ -191,6 +191,7 @@ logoutBtn.onclick = async () => {
   await signOut(auth);
   mainApp.style.display = 'none';
   authSection.style.display = 'block';
+  loginSection.style.display = 'none';  // Hide the login section when logged out
 };
 
 // ===== SIDEBAR FUNCTIONALITY =====
@@ -252,5 +253,6 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     mainApp.style.display = 'none';
     authSection.style.display = 'block';
+    loginSection.style.display = 'none';  // Hide login section if user is not logged in
   }
 });
