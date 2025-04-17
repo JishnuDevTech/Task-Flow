@@ -219,7 +219,9 @@ loginBtn.onclick = async (e) => {
 // Logout function
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
+  showLoading();  // Show loading message while signing out
   await signOut(auth);
+  hideLoading();  // Hide loading message after signing out
   mainApp.style.display = 'none';
   authSection.style.display = 'block';
   loginSection.style.display = 'none';
