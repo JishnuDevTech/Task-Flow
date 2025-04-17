@@ -1,37 +1,52 @@
 // ===== FIREBASE SETUP =====
-const auth = window.firebase.auth;
-const db = window.firebase.db;
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
 
 // ===== TASK MANAGEMENT =====
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
 let tasks = [];
 
-const loadingMessage = document.getElementById('loading-message');  // Assuming you have a div for loading messages
-const successMessage = document.getElementById('success-message');  // Assuming success message div
+const loadingMessage = document.getElementById('loading-message');
+const successMessage = document.getElementById('success-message');
 
-// Show loading message
 function showLoading() {
   loadingMessage.style.display = 'block';
 }
 
-// Hide loading message
 function hideLoading() {
   loadingMessage.style.display = 'none';
 }
 
-// Show success message
 function showSuccess(message) {
   successMessage.textContent = message;
   successMessage.style.display = 'block';
   setTimeout(() => {
     successMessage.style.display = 'none';
-  }, 3000); // Hide after 3 seconds
+  }, 3000);
 }
 
-// Show error message
 function showError(message) {
-  alert(message);  // Alert can be used for error or failure messages
+  alert(message);
 }
 
 async function fetchTasks() {
@@ -55,7 +70,7 @@ async function addTask(task) {
   const user = auth.currentUser;
   if (!user) return alert("User not authenticated!");
 
-  task.userId = user.uid;  // Storing userId to associate tasks with the user
+  task.userId = user.uid;
   try {
     showLoading();
     const docRef = await addDoc(collection(db, "tasks"), task);
@@ -166,9 +181,9 @@ const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
 const loginSection = document.getElementById('login-section');
 
-// Register function
+// Register
 registerBtn.onclick = async (e) => {
-  e.preventDefault();  // Prevent form submission
+  e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
@@ -179,14 +194,13 @@ registerBtn.onclick = async (e) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Create user document in Firestore, storing only the email
     await addDoc(collection(db, "users"), {
       uid: user.uid,
-      email: user.email  // Storing the email in Firestore
+      email: user.email
     });
 
     showSuccess('🎉 Registered successfully! Now login.');
-    authForm.reset();  // Clear input fields
+    authForm.reset();
     authSection.style.display = 'none';
     loginSection.style.display = 'block';
   } catch (err) {
@@ -196,9 +210,9 @@ registerBtn.onclick = async (e) => {
   }
 };
 
-// Login function
+// Login
 loginBtn.onclick = async (e) => {
-  e.preventDefault();  // Prevent form submission
+  e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
@@ -216,12 +230,12 @@ loginBtn.onclick = async (e) => {
   }
 };
 
-// Logout function
+// Logout
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
-  showLoading();  // Show loading message while signing out
+  showLoading();
   await signOut(auth);
-  hideLoading();  // Hide loading message after signing out
+  hideLoading();
   mainApp.style.display = 'none';
   authSection.style.display = 'block';
   loginSection.style.display = 'none';

@@ -23,6 +23,8 @@
       </form>
     </div>
   </section>
+  
+  <!-- Login Section -->
   <section id="login-section" style="display: none;">
     <h2>👤 Login to TaskFlow</h2>
     <form id="login-form">
@@ -33,11 +35,12 @@
       </div>
     </form>
   </section>
-<!-- Loading message -->
-<div id="loading-message" style="display:none;">Loading...</div>
+  
+  <!-- Loading message -->
+  <div id="loading-message" style="display:none;">Loading...</div>
 
-<!-- Success message -->
-<div id="success-message" style="display:none;"></div>
+  <!-- Success message -->
+  <div id="success-message" style="display:none;"></div>
 
   <!-- ✅ Main App -->
   <div id="main-app" style="display: none;">
@@ -62,30 +65,8 @@
         </ul>
       </div>
     </nav>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyCEFInO--cOVbfSikEuqXWhbjSEAz_3CvM",
-        authDomain: "task-flow-a9bc9.firebaseapp.com",
-        projectId: "task-flow-a9bc9",
-        storageBucket: "task-flow-a9bc9.firebasestorage.app",
-        messagingSenderId: "674588917963",
-        appId: "1:674588917963:web:42528dcc23c798e2b1db4e",
-        measurementId: "G-2XJ0B9NJ7M"
-      };
-
-
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      window.firebase = { auth, db };
-    </script>
-
-
+    <!-- App Content -->
     <div class="container">
       <header>
         <h1>📋 TaskFlow</h1>
@@ -116,7 +97,13 @@
       </section>
     </div>
   </div>
-  <script type="module" src="script.js"></script>
+
+  <!-- Firebase SDK -->
+  <!-- Remove Firebase SDK imports, now handled in JS files -->
+
+  <!-- Import Firebase setup and your main app logic -->
+  <script type="module" src="firebase.js"></script> <!-- Firebase config and initialization -->
+  <script type="module" src="script.js"></script> <!-- Your main app logic -->
 </body>
 
 </html>
