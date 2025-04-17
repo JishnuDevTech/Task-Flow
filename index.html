@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaskFlow</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <!-- 🔐 Auth Section -->
   <section id="auth-section">
@@ -15,18 +17,36 @@
         <input type="text" id="auth-username" placeholder="Gmail" required />
         <input type="password" id="auth-password" placeholder="Password" required />
         <div class="auth-buttons">
-          <button id="login-btn">Login</button>
-          <button type="button" id="register-btn">Register</button>
+          <button type="submit" id="login-btn">Login</button> <!-- Add type="submit" to login button -->
+          <button type="button" id="register-btn">Register</button> <!-- type="button" for register button -->
         </div>
       </form>
     </div>
   </section>
+  
+  <!-- Login Section -->
+  <section id="login-section" style="display: none;">
+    <h2>👤 Login to TaskFlow</h2>
+    <form id="login-form">
+      <input type="text" id="login-username" placeholder="Gmail" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <div class="auth-buttons">
+        <button type="submit" id="login-btn">Login</button>
+      </div>
+    </form>
+  </section>
+  
+  <!-- Loading message -->
+  <div id="loading-message" style="display:none;">Loading...</div>
+
+  <!-- Success message -->
+  <div id="success-message" style="display:none;"></div>
 
   <!-- ✅ Main App -->
   <div id="main-app" style="display: none;">
     <!-- Hamburger Menu Button -->
     <button class="hamburger-btn">☰</button>
-    
+
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
       <div class="sidebar-header">
@@ -45,29 +65,8 @@
         </ul>
       </div>
     </nav>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-  
-      const firebaseConfig = {
-        apiKey: "AIzaSyDDcAK57T8F83lvN34kaT3zTRiI8V9cATc",
-        authDomain: "task-flow-545bb.firebaseapp.com",
-        projectId: "task-flow-545bb",
-        storageBucket: "task-flow-545bb.appspot.com",
-        messagingSenderId: "149241506007",
-        appId: "1:149241506007:web:3bb07bdfb7c14e5c316892",
-        measurementId: "G-76WTCRHG5H"
-      };
-  
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-  
-      window.firebase = { auth, db };
-    </script>
-    
-    
+
+    <!-- App Content -->
     <div class="container">
       <header>
         <h1>📋 TaskFlow</h1>
@@ -98,5 +97,9 @@
       </section>
     </div>
   </div>
-  <script type="module" src="script.js"></script></body>
+   <!-- Import Firebase setup and your main app logic -->
+  <script type="module" src="firebase.js"></script> <!-- Firebase config and initialization -->
+  <script type="module" src="script.js"></script> <!-- Your main app logic -->
+</body>
+
 </html>

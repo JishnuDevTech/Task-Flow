@@ -552,3 +552,26 @@ header h1 {
   position: relative;
   padding-left: 40px;
 }
+#loading-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+#success-message {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background-color: green;
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+}

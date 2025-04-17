@@ -1,17 +1,25 @@
-// ===== IMPORT FIREBASE MODULES =====
-import {
-  collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where
-} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-
 // ===== FIREBASE SETUP =====
-const auth = window.firebase.auth;
-const db = window.firebase.db;
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
 
 // ===== GLOBAL STATE =====
 let tasks = [];
@@ -20,14 +28,44 @@ let tasks = [];
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
 
+const loadingMessage = document.getElementById('loading-message');
+const successMessage = document.getElementById('success-message');
+
+function showLoading() {
+  loadingMessage.style.display = 'block';
+}
+
+function hideLoading() {
+  loadingMessage.style.display = 'none';
+}
+
+function showSuccess(message) {
+  successMessage.textContent = message;
+  successMessage.style.display = 'block';
+  setTimeout(() => {
+    successMessage.style.display = 'none';
+  }, 3000);
+}
+
+function showError(message) {
+  alert(message);
+}
+
 async function fetchTasks() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
-  const snapshot = await getDocs(q);
-  tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderTasks();
+  try {
+    showLoading();
+    const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+    const snapshot = await getDocs(q);
+    tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderTasks();
+  } catch (error) {
+    showError('❌ Error fetching tasks: ' + error.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 async function addTask(task) {
@@ -44,15 +82,31 @@ async function addTask(task) {
 async function toggleTaskCompletion(index) {
   const task = tasks[index];
   task.completed = !task.completed;
-  await updateDoc(doc(db, "tasks", task.id), { completed: task.completed });
-  renderTasks();
+  try {
+    showLoading();
+    await updateDoc(doc(db, "tasks", task.id), { completed: task.completed });
+    renderTasks();
+    showSuccess(`✅ Task marked as ${task.completed ? 'completed' : 'incomplete'}`);
+  } catch (error) {
+    showError('❌ Task update failed: ' + error.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 async function deleteTask(index) {
   const task = tasks[index];
-  await deleteDoc(doc(db, "tasks", task.id));
-  tasks.splice(index, 1);
-  renderTasks();
+  try {
+    showLoading();
+    await deleteDoc(doc(db, "tasks", task.id));
+    tasks.splice(index, 1);
+    renderTasks();
+    showSuccess('🎉 Task deleted successfully!');
+  } catch (error) {
+    showError('❌ Task deletion failed: ' + error.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 function createTaskElement(task, index) {
@@ -113,28 +167,16 @@ function renderTasks(showTodayOnly = false, showImportantOnly = false) {
   });
 }
 
-form.onsubmit = async (e) => {
-  e.preventDefault();
-  const title = document.getElementById('task-title').value.trim();
-  const category = document.getElementById('task-category').value.trim();
-  const priority = document.getElementById('task-priority').value;
-  const date = document.getElementById('task-date').value;
-
-  if (!title) return alert('Please enter a task title.');
-
-  const newTask = { title, category, priority, date, completed: false };
-  await addTask(newTask);
-  form.reset();
-};
-
 // ===== AUTH SYSTEM =====
 const authForm = document.getElementById('auth-form');
 const loginBtn = document.getElementById('login-btn');
 const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
+const loginSection = document.getElementById('login-section');
 
 // Register function - Fixed to ensure user has to manually login after registration
+// Register
 registerBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
@@ -147,6 +189,7 @@ registerBtn.onclick = async (e) => {
     // This will help us prevent the automatic login
     window.isRegistering = true;
     
+    showLoading();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -170,8 +213,7 @@ registerBtn.onclick = async (e) => {
     window.isRegistering = false;
   }
 };
-
-// Login function
+// Login
 loginBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
@@ -180,16 +222,23 @@ loginBtn.onclick = async (e) => {
   if (!email || !password) return alert('❗ Email and password are required.');
 
   try {
+    showLoading();
     await signInWithEmailAndPassword(auth, email, password);
     // Auth state change listener will handle showing the main app
+    authSection.style.display = 'none';
+    mainApp.style.display = 'block';
+    await fetchTasks();
+    showSuccess('🎉 Successfully logged in!');
   } catch (err) {
-    alert('❌ Login failed: ' + err.message);
+    showError('❌ Login failed: ' + err.message);
+  } finally {
+    hideLoading();
   }
 };
-
-// Logout function
+// Logout
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
+  showLoading();
   await signOut(auth);
   // Auth state change listener will handle showing the auth section
 };
