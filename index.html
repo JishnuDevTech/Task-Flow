@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaskFlow</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <!-- 🔐 Auth Section -->
   <section id="auth-section">
@@ -26,7 +28,7 @@
   <div id="main-app" style="display: none;">
     <!-- Hamburger Menu Button -->
     <button class="hamburger-btn">☰</button>
-    
+
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
       <div class="sidebar-header">
@@ -49,25 +51,26 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
       import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
       import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-  
+
       const firebaseConfig = {
-        apiKey: "AIzaSyDDcAK57T8F83lvN34kaT3zTRiI8V9cATc",
-        authDomain: "task-flow-545bb.firebaseapp.com",
-        projectId: "task-flow-545bb",
-        storageBucket: "task-flow-545bb.appspot.com",
-        messagingSenderId: "149241506007",
-        appId: "1:149241506007:web:3bb07bdfb7c14e5c316892",
-        measurementId: "G-76WTCRHG5H"
+        apiKey: "AIzaSyCEFInO--cOVbfSikEuqXWhbjSEAz_3CvM",
+        authDomain: "task-flow-a9bc9.firebaseapp.com",
+        projectId: "task-flow-a9bc9",
+        storageBucket: "task-flow-a9bc9.firebasestorage.app",
+        messagingSenderId: "674588917963",
+        appId: "1:674588917963:web:42528dcc23c798e2b1db4e",
+        measurementId: "G-2XJ0B9NJ7M"
       };
-  
+
+
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
-  
+
       window.firebase = { auth, db };
     </script>
-    
-    
+
+
     <div class="container">
       <header>
         <h1>📋 TaskFlow</h1>
@@ -98,5 +101,7 @@
       </section>
     </div>
   </div>
-  <script type="module" src="script.js"></script></body>
+  <script type="module" src="script.js"></script>
+</body>
+
 </html>
