@@ -209,7 +209,6 @@ registerBtn.onclick = async (e) => {
     hideLoading();
   }
 };
-
 // Login
 loginBtn.onclick = async (e) => {
   e.preventDefault();
@@ -229,7 +228,6 @@ loginBtn.onclick = async (e) => {
     hideLoading();
   }
 };
-
 // Logout
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
