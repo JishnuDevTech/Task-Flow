@@ -1,10 +1,56 @@
+// ===== IMPORT FIREBASE MODULES =====
+import {
+  collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+// ===== FIREBASE SETUP FROM WINDOW =====
+const auth = window.firebase.auth;
+const db = window.firebase.db;
+
 // ===== TASK MANAGEMENT =====
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let tasks = [];
 
-function saveTasks() {
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+async function fetchTasks() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+  const snapshot = await getDocs(q);
+  tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderTasks();
+}
+
+async function addTask(task) {
+  const user = auth.currentUser;
+  if (!user) return alert("User not authenticated!");
+
+  task.userId = user.uid;  // Storing userId to associate tasks with the user
+  const docRef = await addDoc(collection(db, "tasks"), task);
+  task.id = docRef.id;
+  tasks.push(task);
+  renderTasks();
+}
+
+async function toggleTaskCompletion(index) {
+  const task = tasks[index];
+  task.completed = !task.completed;
+  await updateDoc(doc(db, "tasks", task.id), { completed: task.completed });
+  renderTasks();
+}
+
+async function deleteTask(index) {
+  const task = tasks[index];
+  await deleteDoc(doc(db, "tasks", task.id));
+  tasks.splice(index, 1);
+  renderTasks();
 }
 
 function createTaskElement(task, index) {
@@ -24,94 +70,58 @@ function createTaskElement(task, index) {
   const completeBtn = document.createElement('button');
   completeBtn.textContent = task.completed ? 'Undo' : 'Done';
   completeBtn.className = 'task-btn complete-btn';
-  completeBtn.onclick = () => {
-    tasks[index].completed = !tasks[index].completed;
-    saveTasks();
-    renderTasks();
-  };
+  completeBtn.onclick = () => toggleTaskCompletion(index);
 
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = 'Delete';
   deleteBtn.className = 'task-btn delete-btn';
-  deleteBtn.onclick = () => {
-    tasks.splice(index, 1);
-    saveTasks();
-    renderTasks();
-  };
+  deleteBtn.onclick = () => deleteTask(index);
 
   buttons.appendChild(completeBtn);
   buttons.appendChild(deleteBtn);
-
   top.appendChild(title);
   top.appendChild(buttons);
 
   const tags = document.createElement('div');
   tags.className = 'tags';
 
-  if (task.category) {
-    const categoryTag = document.createElement('span');
-    categoryTag.textContent = `📁 ${task.category}`;
-    tags.appendChild(categoryTag);
-  }
-
-  if (task.priority) {
-    const priorityTag = document.createElement('span');
-    priorityTag.textContent = `⚡ ${task.priority}`;
-    tags.appendChild(priorityTag);
-  }
+  if (task.category) tags.appendChild(Object.assign(document.createElement('span'), { textContent: `📁 ${task.category}` }));
+  if (task.priority) tags.appendChild(Object.assign(document.createElement('span'), { textContent: `⚡ ${task.priority}` }));
 
   if (task.date) {
     const dateTag = document.createElement('span');
     dateTag.textContent = `📅 ${task.date}`;
-
-    const today = new Date().toISOString().split("T")[0];
-    if (task.date < today) {
-      dateTag.style.backgroundColor = "#ff6b6b";
-    }
-
+    if (task.date < new Date().toISOString().split("T")[0]) dateTag.style.backgroundColor = "#ff6b6b";
     tags.appendChild(dateTag);
   }
 
   card.appendChild(top);
   card.appendChild(tags);
-
   return card;
 }
 
 function renderTasks(showTodayOnly = false, showImportantOnly = false) {
   taskList.innerHTML = '';
   const today = new Date().toISOString().split('T')[0];
-  
+
   tasks.forEach((task, index) => {
     if (showTodayOnly && task.date !== today) return;
     if (showImportantOnly && task.priority !== 'High') return;
-    
-    const taskEl = createTaskElement(task, index);
-    taskList.appendChild(taskEl);
+    taskList.appendChild(createTaskElement(task, index));
   });
 }
 
-form.onsubmit = (e) => {
+form.onsubmit = async (e) => {
   e.preventDefault();
-
   const title = document.getElementById('task-title').value.trim();
   const category = document.getElementById('task-category').value.trim();
   const priority = document.getElementById('task-priority').value;
   const date = document.getElementById('task-date').value;
 
-  if (!title) return;
+  if (!title) return alert('Please enter a task title.');
 
-  const newTask = {
-    title,
-    category,
-    priority,
-    date,
-    completed: false,
-  };
-
-  tasks.push(newTask);
-  saveTasks();
-  renderTasks();
+  const newTask = { title, category, priority, date, completed: false };
+  await addTask(newTask);
   form.reset();
 };
 
@@ -122,57 +132,55 @@ const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
 
-loginBtn.onclick = (e) => {
+loginBtn.onclick = async (e) => {
   e.preventDefault();
-  const username = document.getElementById('auth-username').value.trim();
+  const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
-  const users = JSON.parse(localStorage.getItem('taskflow-users')) || [];
-  const foundUser = users.find(user => user.username === username && user.password === password);
-
-  if (foundUser) {
-    localStorage.setItem('taskflow-current-user', JSON.stringify(foundUser));
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
     authSection.style.display = 'none';
     mainApp.style.display = 'block';
-  } else {
-    alert('❌ Invalid credentials. Please try again or register.');
+    await fetchTasks();
+  } catch (err) {
+    alert('❌ Login failed: ' + err.message);
   }
 };
 
-registerBtn.onclick = (e) => {
+registerBtn.onclick = async (e) => {
   e.preventDefault();
-  const username = document.getElementById('auth-username').value.trim();
+  const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
-  if (!username || !password) {
-    alert('❗ Both username and password are required to register.');
-    return;
+  if (!email || !password) return alert('❗ Email and password are required.');
+
+  try {
+    // Create user in Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Create user document in Firestore, storing only the email
+    await addDoc(collection(db, "users"), {
+      uid: user.uid,
+      email: user.email  // Storing the email in Firestore (not in UI)
+    });
+
+    alert('🎉 Registered successfully! Now login.');
+    authForm.reset();
+  } catch (err) {
+    alert('❌ Registration failed: ' + err.message);
   }
-
-  const users = JSON.parse(localStorage.getItem('taskflow-users')) || [];
-  const userExists = users.some(user => user.username === username);
-
-  if (userExists) {
-    alert('⚠️ Username already exists. Choose a different one.');
-    return;
-  }
-
-  users.push({ username, password });
-  localStorage.setItem('taskflow-users', JSON.stringify(users));
-  alert('🎉 Registered successfully! Now login.');
-  authForm.reset();
 };
 
-// ===== LOGOUT FUNCTIONALITY =====
 const logoutBtn = document.getElementById('logout-btn');
-logoutBtn.onclick = () => {
-  localStorage.removeItem('taskflow-current-user');
+logoutBtn.onclick = async () => {
+  await signOut(auth);
   mainApp.style.display = 'none';
   authSection.style.display = 'block';
 };
 
 // ===== SIDEBAR FUNCTIONALITY =====
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const hamburgerBtn = document.querySelector('.hamburger-btn');
   const sidebar = document.querySelector('.sidebar');
   const closeBtn = document.querySelector('.close-btn');
@@ -180,11 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
   backdrop.className = 'sidebar-backdrop';
   document.body.appendChild(backdrop);
 
-  const mainMenu = document.querySelector('.main-menu');
-  const settingsMenu = document.querySelector('.settings-menu');
-  const backBtn = document.querySelector('.back-btn');
-
-  hamburgerBtn.addEventListener('click', function(e) {
+  hamburgerBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     sidebar.classList.add('active');
     backdrop.style.display = 'block';
@@ -192,90 +196,47 @@ document.addEventListener('DOMContentLoaded', function() {
     hamburgerBtn.style.pointerEvents = 'none';
   });
 
-  closeBtn.addEventListener('click', function() {
+  closeBtn.addEventListener('click', function () {
     sidebar.classList.remove('active');
     backdrop.style.display = 'none';
     hamburgerBtn.style.opacity = '1';
     hamburgerBtn.style.pointerEvents = 'auto';
   });
 
-  backdrop.addEventListener('click', function() {
+  backdrop.addEventListener('click', function () {
     sidebar.classList.remove('active');
     backdrop.style.display = 'none';
     hamburgerBtn.style.opacity = '1';
     hamburgerBtn.style.pointerEvents = 'auto';
-  });
-
-  document.addEventListener('click', function(event) {
-    if (!sidebar.contains(event.target) && event.target !== hamburgerBtn) {
-      sidebar.classList.remove('active');
-      backdrop.style.display = 'none';
-      hamburgerBtn.style.opacity = '1';
-      hamburgerBtn.style.pointerEvents = 'auto';
-    }
-  });
-
-  sidebar.addEventListener('click', function(e) {
-    e.stopPropagation();
   });
 
   document.querySelectorAll('.menu-item').forEach(item => {
-    item.addEventListener('click', function(e) {
+    item.addEventListener('click', function (e) {
       e.preventDefault();
       const section = this.dataset.section;
-      
-      if (section === 'settings') {
-        mainMenu.style.display = 'none';
-        settingsMenu.style.display = 'block';
-        backBtn.style.display = 'block';
-      } else {
-        showSection(section);
+      switch (section) {
+        case 'dashboard':
+        case 'all-tasks': renderTasks(); break;
+        case 'today-tasks': renderTasks(true); break;
+        case 'important': renderTasks(false, true); break;
       }
-    });
-  });
 
-  backBtn.addEventListener('click', function() {
-    settingsMenu.style.display = 'none';
-    mainMenu.style.display = 'block';
-    this.style.display = 'none';
-  });
-
-  function showSection(section) {
-    switch(section) {
-      case 'dashboard':
-        renderTasks();
-        break;
-      case 'all-tasks':
-        renderTasks();
-        break;
-      case 'today-tasks':
-        renderTasks(true);
-        break;
-      case 'important':
-        renderTasks(false, true);
-        break;
-    }
-
-    if (window.innerWidth <= 768) {
       sidebar.classList.remove('active');
       backdrop.style.display = 'none';
       hamburgerBtn.style.opacity = '1';
       hamburgerBtn.style.pointerEvents = 'auto';
-    }
-  }
+    });
+  });
 });
 
-// ===== INITIAL LOAD =====
-window.onload = () => {
-  const currentUser = JSON.parse(localStorage.getItem('taskflow-current-user'));
-
-  if (currentUser) {
+// ===== LOAD TASKS IF USER ALREADY LOGGED IN =====
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
     mainApp.style.display = 'block';
     authSection.style.display = 'none';
+    await fetchTasks();
   } else {
     mainApp.style.display = 'none';
     authSection.style.display = 'block';
   }
-
-  renderTasks();
-};
+});
