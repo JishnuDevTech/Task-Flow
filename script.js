@@ -263,18 +263,22 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-onAuthStateChanged(auth, async (user) => {
-  // 1) remove the loading guard so our logic can run
-  document.body.classList.remove('loading');
+let authInitialized = false;
 
-  // 2) now show either main app or auth form
+onAuthStateChanged(auth, async (user) => {
+  if (authInitialized) return;
+  authInitialized = true;
+
+  const spinner = document.getElementById('loading-spinner');
+  spinner.style.display = 'none';
+
   if (user && !window.isRegistering) {
     mainApp.style.display = 'block';
     authSection.style.display = 'none';
     await fetchTasks();
   } else {
-    authSection.style.display = 'block';
     mainApp.style.display = 'none';
+    authSection.style.display = 'block';
     tasks = [];
   }
 });
