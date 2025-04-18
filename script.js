@@ -263,22 +263,18 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-let authInitialized = false;
-
 onAuthStateChanged(auth, async (user) => {
-  if (authInitialized) return;
-  authInitialized = true;
+  // 1) remove the loading guard so our logic can run
+  document.body.classList.remove('loading');
 
-  const spinner = document.getElementById('loading-spinner');
-  spinner.style.display = 'none';
-
+  // 2) now show either main app or auth form
   if (user && !window.isRegistering) {
     mainApp.style.display = 'block';
     authSection.style.display = 'none';
     await fetchTasks();
   } else {
-    mainApp.style.display = 'none';
     authSection.style.display = 'block';
+    mainApp.style.display = 'none';
     tasks = [];
   }
 });
