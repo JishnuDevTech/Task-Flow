@@ -16,23 +16,32 @@ const db = window.firebase.db;
 // ===== GLOBAL STATE =====
 let tasks = [];
 
+// ===== UTIL =====
+function showMessage(message, type = 'info') {
+  alert(`${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'} ${message}`);
+}
+
 // ===== TASK MANAGEMENT =====
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
 
 async function fetchTasks() {
-  const user = auth.currentUser;
-  if (!user) return;
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
 
-  const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
-  const snapshot = await getDocs(q);
-  tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderTasks();
+    const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+    const snapshot = await getDocs(q);
+    tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderTasks();
+  } catch (err) {
+    console.error("❌ Failed to fetch tasks:", err.message);
+  }
 }
 
 async function addTask(task) {
   const user = auth.currentUser;
-  if (!user) return alert("User not authenticated!");
+  if (!user) return showMessage("User not authenticated!", "error");
 
   task.userId = user.uid;
   const docRef = await addDoc(collection(db, "tasks"), task);
@@ -90,7 +99,7 @@ function createTaskElement(task, index) {
   if (task.category) tags.appendChild(Object.assign(document.createElement('span'), { textContent: `📁 ${task.category}` }));
   if (task.priority) tags.appendChild(Object.assign(document.createElement('span'), { textContent: `⚡ ${task.priority}` }));
 
-  if (task.date) {
+  if (task.date && /^\d{4}-\d{2}-\d{2}$/.test(task.date)) {
     const dateTag = document.createElement('span');
     dateTag.textContent = `📅 ${task.date}`;
     if (task.date < new Date().toISOString().split("T")[0]) dateTag.style.backgroundColor = "#ff6b6b";
@@ -120,7 +129,7 @@ form.onsubmit = async (e) => {
   const priority = document.getElementById('task-priority').value;
   const date = document.getElementById('task-date').value;
 
-  if (!title) return alert('Please enter a task title.');
+  if (!title) return showMessage('Please enter a task title.', 'error');
 
   const newTask = { title, category, priority, date, completed: false };
   await addTask(newTask);
@@ -134,19 +143,17 @@ const registerBtn = document.getElementById('register-btn');
 const mainApp = document.getElementById('main-app');
 const authSection = document.getElementById('auth-section');
 
-// Register function - Fixed to ensure user has to manually login after registration
+// Register
 registerBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
-  if (!email || !password) return alert('❗ Email and password are required.');
+  if (!email || !password) return showMessage('Email and password are required.', 'error');
 
   try {
-    // Explicitly set a flag before creating the user
-    // This will help us prevent the automatic login
     window.isRegistering = true;
-    
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -155,43 +162,55 @@ registerBtn.onclick = async (e) => {
       email: user.email
     });
 
-    // Sign out the user immediately
     await signOut(auth);
-    
-    // Clear the form fields
     authForm.reset();
-    
-    alert('🎉 Registered successfully! Please login with your credentials.');
-    
+    showMessage('🎉 Registered successfully! Please login with your credentials.', 'success');
   } catch (err) {
-    alert('❌ Registration failed: ' + err.message);
+    const code = err.code;
+    if (code === 'auth/email-already-in-use') {
+      showMessage('That email is already registered. Try logging in.', 'error');
+    } else if (code === 'auth/weak-password') {
+      showMessage('Password should be at least 6 characters.', 'error');
+    } else {
+      showMessage('Registration failed: ' + err.message, 'error');
+    }
   } finally {
-    // Clean up the registration flag
     window.isRegistering = false;
   }
 };
 
-// Login function
+// Login
 loginBtn.onclick = async (e) => {
   e.preventDefault();
   const email = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
 
-  if (!email || !password) return alert('❗ Email and password are required.');
+  if (!email || !password) return showMessage('Email and password are required.', 'error');
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // Auth state change listener will handle showing the main app
+    showMessage('🎉 Login successful!', 'success');
   } catch (err) {
-    alert('❌ Login failed: ' + err.message);
+    const code = err.code;
+    if (code === 'auth/user-not-found') {
+      showMessage('No user found with this email. Try registering first.', 'error');
+    } else if (code === 'auth/wrong-password') {
+      showMessage('Incorrect password. Try again.', 'error');
+    } else {
+      showMessage('Login failed: ' + err.message, 'error');
+    }
   }
 };
 
-// Logout function
+// Logout
 const logoutBtn = document.getElementById('logout-btn');
 logoutBtn.onclick = async () => {
-  await signOut(auth);
-  // Auth state change listener will handle showing the auth section
+  try {
+    await signOut(auth);
+    showMessage('Logged out successfully.', 'success');
+  } catch (err) {
+    showMessage('Logout failed: ' + err.message, 'error');
+  }
 };
 
 // ===== SIDEBAR FUNCTIONALITY =====
@@ -203,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
   backdrop.className = 'sidebar-backdrop';
   document.body.appendChild(backdrop);
 
-  hamburgerBtn.addEventListener('click', function (e) {
+  hamburgerBtn?.addEventListener('click', function (e) {
     e.stopPropagation();
     sidebar.classList.add('active');
     backdrop.style.display = 'block';
@@ -211,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
     hamburgerBtn.style.pointerEvents = 'none';
   });
 
-  closeBtn.addEventListener('click', function () {
+  closeBtn?.addEventListener('click', function () {
     sidebar.classList.remove('active');
     backdrop.style.display = 'none';
     hamburgerBtn.style.opacity = '1';
@@ -244,21 +263,18 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-// ===== LOAD TASKS IF USER ALREADY LOGGED IN =====
 onAuthStateChanged(auth, async (user) => {
+  // 1) remove the loading guard so our logic can run
+  document.body.classList.remove('loading');
+
+  // 2) now show either main app or auth form
   if (user && !window.isRegistering) {
-    // Only show the main app if user is logged in AND we're not in the registration process
     mainApp.style.display = 'block';
     authSection.style.display = 'none';
     await fetchTasks();
   } else {
-    // Show auth section if no user or during registration
-    mainApp.style.display = 'none';
     authSection.style.display = 'block';
-    
-    // If we're handling a logout or registration completion, clear any tasks from memory
-    if (!user) {
-      tasks = [];
-    }
+    mainApp.style.display = 'none';
+    tasks = [];
   }
 });

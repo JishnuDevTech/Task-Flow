@@ -15,7 +15,7 @@
         <input type="text" id="auth-username" placeholder="Gmail" required />
         <input type="password" id="auth-password" placeholder="Password" required />
         <div class="auth-buttons">
-          <button id="login-btn">Login</button>
+          <button id="login-btn" type="button">Login</button>
           <button type="button" id="register-btn">Register</button>
         </div>
       </form>
@@ -26,7 +26,7 @@
   <div id="main-app" style="display: none;">
     <!-- Hamburger Menu Button -->
     <button class="hamburger-btn">☰</button>
-    
+
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
       <div class="sidebar-header">
@@ -45,29 +45,7 @@
         </ul>
       </div>
     </nav>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-  
-      const firebaseConfig = {
-        apiKey: "AIzaSyDDcAK57T8F83lvN34kaT3zTRiI8V9cATc",
-        authDomain: "task-flow-545bb.firebaseapp.com",
-        projectId: "task-flow-545bb",
-        storageBucket: "task-flow-545bb.appspot.com",
-        messagingSenderId: "149241506007",
-        appId: "1:149241506007:web:3bb07bdfb7c14e5c316892",
-        measurementId: "G-76WTCRHG5H"
-      };
-  
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-  
-      window.firebase = { auth, db };
-    </script>
-    
-    
+
     <div class="container">
       <header>
         <h1>📋 TaskFlow</h1>
@@ -98,5 +76,44 @@
       </section>
     </div>
   </div>
-  <script type="module" src="script.js"></script></body>
+
+  <!-- Firebase Initialization -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDcAK57T8F83lvN34kaT3zTRiI8V9cATc",
+      authDomain: "task-flow-545bb.firebaseapp.com",
+      projectId: "task-flow-545bb",
+      storageBucket: "task-flow-545bb.appspot.com",
+      messagingSenderId: "149241506007",
+      appId: "1:149241506007:web:3bb07bdfb7c14e5c316892",
+      measurementId: "G-76WTCRHG5H"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.firebase = { auth, db };
+  </script>
+
+  <!-- Main Script -->
+  <script type="module" src="script.js"></script>
+  <body class="loading">
+      <!-- Loading Spinner -->
+  <div id="loader" class="loader"></div>
+    <!-- 🔐 Auth Section -->
+    <section id="auth-section">
+      …
+    </section>
+  
+    <!-- ✅ Main App -->
+    <div id="main-app">
+      …
+    </div>
+  </body>  
+</body>
 </html>
